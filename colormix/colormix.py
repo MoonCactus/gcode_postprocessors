@@ -39,7 +39,7 @@ def plugin_standalone_usage(my_name):
     print("Usage:")
     print("  "+my_name+" --file stringGcodeFile --extruders integerToolCount --random 123 ")
     print("  "+my_name+" --file stringGcodeFile --mix integerNozzleCount --speed integerPercentage --random 123 )")
-    print("Licensed under CC-BY-NC 2012-2015 by jeremie.francois@gmail.com (www.tridimake.com)")
+    print("Licensed under CC-BY 2012-2015 by jeremie.francois@gmail.com (www.tridimake.com)")
     sys.exit()
 try:
     # this variable is defined only when we are being called within Cura
@@ -48,7 +48,7 @@ try:
 except NameError:
     # Then, we are called from the command line (not from Cura)
     # trying len(inspect.stack()) > 2 would be less secure btw
-    opts, extraparams = getopt.getopt(
+    opts, extra_params = getopt.getopt(
         sys.argv[1:],
         'x:m:s:r:f:hd',
         ['extruders=', 'mix=', 'speed=', 'random=', 'file=', 'help', 'doc'])
