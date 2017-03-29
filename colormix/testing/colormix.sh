@@ -31,12 +31,15 @@ function minmax
 	'
 }
 
-test -f $input
+if [[ ! -f $input ]]; then
+	echo "You must provide the g-code source filename"
+	exit
+fi
 
 f=$(echo $input| sed 's/_source//')
 cp "$input" "$f"
 
-python Colormix.py --file $f --mix 3 --speed $speed --doc --random $random
+python ../colormix.py --file $f --mix 3 --speed $speed --doc --random $random
 
 for i in 0 1 2; do
 	echo -n "M163 S$i: "

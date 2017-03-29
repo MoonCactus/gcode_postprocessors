@@ -34,6 +34,7 @@ __license__ = 'GNU Affero General Public License http://www.gnu.org/licenses/agp
 # Latest version: 20151001-191033
 #
 
+
 def plugin_standalone_usage(my_name):
     print("Usage:")
     print("  "+my_name+" --file stringGcodeFile --extruders integerToolCount --random 123 ")
@@ -79,6 +80,7 @@ except NameError:
 #
 # ########### END CURA PLUGIN STAND-ALONIFICATION ############
 
+
 def get_value(line, key, default=None):
     if (key not in line) or (';' in line and line.find(key) > line.find(';')):
         return default
@@ -109,11 +111,11 @@ for line in lines:
         if maxZ < z:
             maxZ = z
 
-#print("Max Z is %i" % maxZ)
+# print("Max Z is %i" % maxZ)
 
 lastExtruder = -1
 
-#lastMixes = [-1] * mixCount
+# lastMixes = [-1] * mixCount
 lastMixes = [-1 for _ in range(mixCount)]
 speedRatio = [0.5 + random.randint(0,100)/100.0 for _ in range(mixCount)]
 mixOffsetDegrees = [360*random.randint(0,100)/100.0 for _ in range(mixCount)]
@@ -127,7 +129,7 @@ else:
 regexToRemove += ')'
 
 
-def mixCycle(normalizedIndex, speed, offsetDegree):
+def mix_cycle(normalizedIndex, speed, offsetDegree):
     "Returns a normalized cyclic value"
     angle = 2*math.pi * normalizedIndex
     offset = 2*math.pi * offsetDegree / 360
@@ -135,14 +137,14 @@ def mixCycle(normalizedIndex, speed, offsetDegree):
     return int(math.floor(100 * amplitude))
 
 
-fout = open(filename, "w")
-with fout as f:
+file_out = open(filename, "w")
+with file_out as f:
     f.write(";mixing : ")
     if mixCount == 0:
         f.write("switching among {0} tools, every {1:.2f}mm".format(toolCount, maxZ/toolCount))
     else:
         f.write("mixing {0} materials along Z axis".format(mixCount))
-    f.write(" (total height is {0:.2f}mm)\n".format(maxZ));
+    f.write(" (total height is {0:.2f}mm)\n".format(maxZ))
 
     for line in lines:
         gv= get_value(line, 'G', None)
@@ -152,7 +154,7 @@ with fout as f:
                 # switches "tools", that need to be pre-configured for specific mixing levels
                 # The change in tool index is continuous so you can pre-define shades.
                 zn = z / maxZ  # we need a normalized value
-                #print("Z={0}".format(zn))
+                # print("Z={0}".format(zn))
                 extruder = int(toolCount * zn)
                 if extruder != lastExtruder:
                     lastExtruder = extruder
@@ -163,12 +165,12 @@ with fout as f:
                 mf = [0.0] * mixCount
                 t = 0.0
                 for i in range(mixCount):
-                    a = mixCycle(z * mixSpeed / 20, speedRatio[i], mixOffsetDegrees[i])
+                    a = mix_cycle(z * mixSpeed / 20, speedRatio[i], mixOffsetDegrees[i])
                     t += a
                     mf[i]= a
                 if t:
                     fix = 0
-                    didChange = 0;
+                    didChange = 0
                     for i in range(mixCount):
                         if i < mixCount - 1:
                             pc = round(100 * mf[i] / t)
@@ -180,21 +182,20 @@ with fout as f:
                             f.write("M163 S{0} {1}\n".format(i,pc))
                             didChange = 1
                     if didChange:
-                        f.write("M164 S0\n");  # "store it" to virtual extruder 0 - Repetier hack?
+                        f.write("M164 S0\n")  # "store it" to virtual extruder 0 - Repetier hack?
+                        if insertPlotData:
+                            # helps to plot the curves (grep + gnuplot), e.g. with:
+                            #
+                            # grep ';mixing_plot' $f |awk '{print $2 "\t" $3 "\t" $4 "\t" $5}' |sed '0,/^0/d' > /tmp/mix.dat
+                            # gnuplot -p -e 'set yrange [0 : 100]; plot
+                            #           "/tmp/mix.dat" using 1:2 title "C" with lines,
+                            #           "/tmp/mix.dat" using 1:3 title "Y" with lines,
+                            #           "/tmp/mix.dat" using 1:4 title "M" with lines'
 
-                    if insertPlotData:
-                        # helps to plot the curves (grep + gnuplot), e.g. with:
-                        #
-                        # grep ';mixing_plot' $f |awk '{print $2 "\t" $3 "\t" $4 "\t" $5}' |sed '0,/^0/d' > /tmp/mix.dat
-                        # gnuplot -p -e 'set yrange [0 : 100]; plot
-                        #           "/tmp/mix.dat" using 1:2 title "C" with lines,
-                        #           "/tmp/mix.dat" using 1:3 title "Y" with lines,
-                        #           "/tmp/mix.dat" using 1:4 title "M" with lines'
-
-                        f.write(";mixing_plot\t{0}\t".format(z))
-                        for i in range(mixCount):
-                            f.write("{0}\t".format(lastMixes[i]))
-                        f.write("\n")
+                            f.write(";mixing_plot\t{0}\t".format(z))
+                            for i in range(mixCount):
+                                f.write("{0}\t".format(lastMixes[i]))
+                            f.write("\n")
 
             f.write(line)
 

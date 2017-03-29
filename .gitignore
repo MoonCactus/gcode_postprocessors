@@ -6,5 +6,6 @@ obj
 *.stl
 *.gcode
 .ide
+.idea
 .pioenvs
 .piolibdeps
