@@ -95,3 +95,10 @@ It shows the variations of temperature according to the Z height, so you can get
 ;WoodGraph: Z 8.800000 @219C | ###########........
 (...)
 ```
+
+# Bugs and caveat
+
+Do not use Z-hop options, as the script is not smart enough to avoid changing temperatures even though there is no extrusion made.
+
+Bug: some people reported UTF8 issues when running Python3 on Windows. Do not run Python3 or better, do not run Windows and you will be good :-D More seriously I may fix the bug one day, but I really want to be compatible with both versions of windows (ref.: http://stackoverflow.com/questions/10971033/backporting-python-3-openencoding-utf-8-to-python-2 )
+

@@ -10,6 +10,11 @@
 # Param: maxUpward(float:0) Instant temperature increase limit, as required by some firmwares (C)
 # Param: zOffset(float:0) Vertical shift of the variations, as shown at the end of the gcode file (mm)
 
+__copyright__ = "Copyright (C) 2012-2017 Jeremie@Francois.gmail.com"
+__author__ = 'Jeremie Francois (jeremie.francois@gmail.com)'
+__date__ = '$Date: 2017/25/04 14:34:12 $'
+__license__ = 'GNU Affero General Public License http://www.gnu.org/licenses/agpl.html'
+
 import re
 import random
 import math
@@ -18,9 +23,6 @@ import inspect
 import sys
 import getopt
 
-__author__ = 'Jeremie Francois (jeremie.francois@gmail.com)'
-__date__ = '$Date: 2016/01/01 19:11:14 $'
-__license__ = 'GNU Affero General Public License http://www.gnu.org/licenses/agpl.html'
 
 ############ BEGIN CURA PLUGIN STAND-ALONIFICATION ############
 # This part is an "adapter" to Daid's version of my original Cura/Skeinforge plugin that
@@ -35,6 +37,7 @@ __license__ = 'GNU Affero General Public License http://www.gnu.org/licenses/agp
 # It will "patch" your gcode file with the appropriate M104 temperature change.
 #
 
+# TODO: support  UTF8 for both python3 and 2, e.g. open(filename, "r", encoding="utf_8")
 
 def plugin_standalone_usage(myName):
     print("Usage:")
