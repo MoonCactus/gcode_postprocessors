@@ -1,14 +1,14 @@
-# Name: Wood
-# Info: Vary the print temperature troughout the print to create wood rings with some printing material such as the LayWoo. The higher the temperature, the darker the print.
-# Depend: GCode
-# Type: postprocess
-# Param: minTemp(float:180) Minimum print temperature (degree C)
-# Param: maxTemp(float:230) Maximum print temperature (degree C)
-# Param: grainSize(float:3.0) Average "wood grain" size (mm)
-# Param: firstTemp(float:0) Starting temperature (degree C, zero to disable)
-# Param: spikinessPower(float:1.0) Relative thickness of light bands (power, >1 to make dark bands sparser)
-# Param: maxUpward(float:0) Instant temperature increase limit, as required by some firmwares (C)
-# Param: zOffset(float:0) Vertical shift of the variations, as shown at the end of the gcode file (mm)
+#Name: Wood
+#Info: Vary the print temperature troughout the print to create wood rings with some printing material such as the LayWoo. The higher the temperature, the darker the print.
+#Depend: GCode
+#Type: postprocess
+#Param: minTemp(float:180) Minimum print temperature (degree C)
+#Param: maxTemp(float:230) Maximum print temperature (degree C)
+#Param: grainSize(float:3.0) Average "wood grain" size (mm)
+#Param: firstTemp(float:0) Starting temperature (degree C, zero to disable)
+#Param: spikinessPower(float:1.0) Relative thickness of light bands (power, >1 to make dark bands sparser)
+#Param: maxUpward(float:0) Instant temperature increase limit, as required by some firmwares (C)
+#Param: zOffset(float:0) Vertical shift of the variations, as shown at the end of the gcode file (mm)
 
 __copyright__ = "Copyright (C) 2012-2017 Jeremie@Francois.gmail.com"
 __author__ = 'Jeremie Francois (jeremie.francois@gmail.com)'
