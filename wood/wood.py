@@ -8,7 +8,9 @@
 #Param: firstTemp(float:0) Starting temperature (degree C, zero to disable)
 #Param: spikinessPower(float:1.0) Relative thickness of light bands (power, >1 to make dark bands sparser)
 #Param: maxUpward(float:0) Instant temperature increase limit, as required by some firmwares (C)
+#Param: maxDownward(float:0) Instant temperature decrease limit, as some firmwares crash on big drops (C)
 #Param: zOffset(float:0) Vertical shift of the variations, as shown at the end of the gcode file (mm)
+#Param: skipStartZ(float:0) Skip some Z at start of print, i.e. raft height (mm)
 
 __copyright__ = "Copyright (C) 2012-2017 Jeremie@Francois.gmail.com"
 __author__ = 'Jeremie Francois (jeremie.francois@gmail.com)'
@@ -56,14 +58,16 @@ try:
 except NameError:
     # Then we are called from the command line (not from cura)
     # trying len(inspect.stack()) > 2 would be less secure btw
-    opts, extraparams = getopt.getopt(sys.argv[1:], 'i:a:t:g:u:r:s:z:f:h',
-                                      ['min=', 'max=', 'first-temp=', 'grain=', 'max-upward=', 'random-seed=',
-                                       'spikiness-power=', 'z-offset=', 'file=', 'help'])
+    opts, extraparams = getopt.getopt(sys.argv[1:], 'i:a:t:g:u:d:r:s:z:k:f:h',
+                                      ['min=', 'max=', 'first-temp=', 'grain=', 'max-upward=', 'max-downward=', 'random-seed=',
+                                       'spikiness-power=', 'z-offset=', 'skip-start-z=', 'file=', 'help'])
     minTemp = 190
     maxTemp = 240
     firstTemp = 0
     grainSize = 3
     maxUpward = 0
+    maxDownward = 0
+    skipStartZ = 0
     zOffset = 0
     spikinessPower = 1.0
     filename = ""
@@ -80,6 +84,10 @@ except NameError:
             grainSize = float(p)
         elif o in ['-u', '--max-upward']:
             maxUpward = float(p)
+        elif o in ['-d', '--max-downward']:
+            maxDownward = float(p)
+        elif o in ['-k', '--skip-start-z']:
+            skipStartZ = float(p)
         elif o in ['-z', '--z-offset']:
             random.seed(0)
             zOffset = float(p)
@@ -263,7 +271,7 @@ for line in lines:
     if thisZ > 2 + formerZ:
         formerZ = thisZ
     # noises = {}  # some damn slicers include a big negative Z shift at the beginning, which impacts the min/max range
-    elif abs(thisZ - formerZ) > minimumChangeZ:
+    elif abs(thisZ - formerZ) > minimumChangeZ and thisZ > skipStartZ:
         formerZ = thisZ
         noises[thisZ] = perlin_to_normalized_wood(thisZ)
 lastPatchZ = thisZ  # record when to stop patching M104, to leave the last one switch the temperature off
@@ -302,8 +310,12 @@ with open(filename, "w") as f:
 
     graphStr = ";WoodGraph: Wood temperature graph (from " + str(minTemp) + "C to " + str(
         maxTemp) + "C, grain size " + str(grainSize) + "mm, z-offset " + str(zOffset) + ")"
+    if skipStartZ:
+        graphStr += ", skipped first " + str(skipStartZ) + "mm of print"
     if maxUpward:
         graphStr += ", temperature increases capped at " + str(maxUpward)
+    if maxDownward:
+        graphStr += ", temperature decreases capped at " + str(maxDownward)
     graphStr += ":"
     graphStr += eol
 
@@ -345,6 +357,11 @@ with open(filename, "w") as f:
                                 and (temp > postponedTempLast + maxUpward ):
                             postponedTempDelta = temp - (postponedTempLast + maxUpward)
                             temp = postponedTempLast + maxUpward
+                        if (postponedTempLast is not None)\
+                                and (maxDownward > 0)\
+                                and (temp < postponedTempLast - maxDownward ):
+                            postponedTempDelta = postponedTempLast - maxDownward - temp
+                            temp = postponedTempLast - maxDownward
                         if temp > maxTemp:
                             postponedTempDelta = 0
                             temp = maxTemp
