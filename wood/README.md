@@ -48,6 +48,7 @@ The parameters and their defaults are:
 * ```maxDownward``` (float:0) Instant temperature decrease limit, as required by some firmwares (celcius degrees, please)
 * ```zOffset``` (float:0) Vertical shift of the variations, as shown at the end of the gcode file (mm)
 * ```skipStartZ``` (float:0) Skip some Z at start of print, i.e. raft height (mm)
+* ```scanForZHop``` (int:5) Lines to scan ahead for Z-Hop.  Max 5, 0 to disable.
 
 The ```gcodeFile``` is the only compulsory parameter.  Check the source code for more information.
 
@@ -99,8 +100,6 @@ It shows the variations of temperature according to the Z height, so you can get
 ```
 
 # Bugs and caveat
-
-Do not use Z-hop options, as the script is not smart enough to avoid changing temperatures even though there is no extrusion made.
 
 Bug: some people reported UTF8 issues when running Python3 on Windows. Do not run Python3 or better, do not run Windows and you will be good :-D More seriously I may fix the bug one day, but I really want to be compatible with both versions of windows (ref.: http://stackoverflow.com/questions/10971033/backporting-python-3-openencoding-utf-8-to-python-2 )
 

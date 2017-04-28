@@ -11,6 +11,7 @@
 #Param: maxDownward(float:0) Instant temperature decrease limit, as some firmwares crash on big drops (C)
 #Param: zOffset(float:0) Vertical shift of the variations, as shown at the end of the gcode file (mm)
 #Param: skipStartZ(float:0) Skip some Z at start of print, i.e. raft height (mm)
+#Param: scanForZHop(int:5) Lines to scan ahead for Z-Hop.  Max 5, 0 to disable.
 
 __copyright__ = "Copyright (C) 2012-2017 Jeremie@Francois.gmail.com"
 __author__ = 'Jeremie Francois (jeremie.francois@gmail.com)'
@@ -58,9 +59,9 @@ try:
 except NameError:
     # Then we are called from the command line (not from cura)
     # trying len(inspect.stack()) > 2 would be less secure btw
-    opts, extraparams = getopt.getopt(sys.argv[1:], 'i:a:t:g:u:d:r:s:z:k:f:h',
+    opts, extraparams = getopt.getopt(sys.argv[1:], 'i:a:t:g:u:d:r:s:z:k:c:f:h',
                                       ['min=', 'max=', 'first-temp=', 'grain=', 'max-upward=', 'max-downward=', 'random-seed=',
-                                       'spikiness-power=', 'z-offset=', 'skip-start-z=', 'file=', 'help'])
+                                       'spikiness-power=', 'z-offset=', 'skip-start-z=', 'scan-for-z-hop=', 'file=', 'help'])
     minTemp = 190
     maxTemp = 240
     firstTemp = 0
@@ -69,6 +70,7 @@ except NameError:
     maxDownward = 0
     skipStartZ = 0
     zOffset = 0
+    scanForZHop = 5
     spikinessPower = 1.0
     filename = ""
     for o, p in opts:
@@ -91,6 +93,8 @@ except NameError:
         elif o in ['-z', '--z-offset']:
             random.seed(0)
             zOffset = float(p)
+        elif o in ['-c', '--scan-for-z-hop']:
+            scanForZHop = int(p)
         elif o in ['-r', '--random-seed']:
             if p != 0:
                 random.seed(p)
@@ -262,7 +266,6 @@ def perlin_to_normalized_wood(z):
 # Generate normalized noises, and then temperatures (will be indexed by Z value)
 noises = {}
 # first value is hard encoded since some slicers do not write a Z0 at the first layer!
-# TODO: keep only Z changes that are followed by real extrusion (ie. discard non-printing head movements!)
 noises[0] = perlin_to_normalized_wood(0)
 pendingNoise = None
 formerZ = -1
@@ -285,6 +288,19 @@ for z, v in noises.items():
 
 def noise_to_temp(noise):
     return minTemp + noise * (maxTemp - minTemp)
+
+scanForZHop = int(scanForZHop) #fix unicode error when using in range
+if scanForZHop > 5:
+    scanForZHop = 5
+
+def z_hop_scan_ahead(index, z):
+    if scanForZHop == 0:
+        return False #Do not scan ahead
+    for i in range(scanForZHop):
+        checkZ = get_z(lines[index + i], z)
+        if checkZ < z:
+            return True #Found z-hop
+    return False #Did not find z-hop
 
 
 #
@@ -309,7 +325,7 @@ with open(filename, "w") as f:
     f.write(warmingTempCommands);
 
     graphStr = ";WoodGraph: Wood temperature graph (from " + str(minTemp) + "C to " + str(
-        maxTemp) + "C, grain size " + str(grainSize) + "mm, z-offset " + str(zOffset) + ")"
+        maxTemp) + "C, grain size " + str(grainSize) + "mm, z-offset " + str(zOffset) + ", scanForZHop " + str(scanForZHop) + ")"
     if skipStartZ:
         graphStr += ", skipped first " + str(skipStartZ) + "mm of print"
     if maxUpward:
@@ -326,7 +342,7 @@ with open(filename, "w") as f:
     postponedTempDelta = 0  # only when maxUpward is used
     postponedTempLast = None  # only when maxUpward is used
     skip_lines = 0
-    for line in lines:
+    for index, line in enumerate(lines):
         if "; set extruder " in line.lower():  # special fix for BFB
             f.write(line)
             f.write(warmingTempCommands)
@@ -342,7 +358,7 @@ with open(filename, "w") as f:
                 f.write(line)  # no more patch, keep the important end scripts unchanged
             elif not "m104" in line.lower():  # forget any previous temp in the file
                 thisZ = get_z(line, formerZ)
-                if thisZ != formerZ and thisZ in noises:
+                if thisZ != formerZ and thisZ in noises and not z_hop_scan_ahead(index, thisZ):
 
                     if firstTemp != 0 and thisZ <= 0.5:  # if specifed, keep the first temp for the first 0.5mm
                         temp = firstTemp
