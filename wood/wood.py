@@ -8,10 +8,10 @@
 #Param: firstTemp(float:0) Starting temperature (degree C, zero to disable)
 #Param: spikinessPower(float:1.0) Relative thickness of light bands (power, >1 to make dark bands sparser)
 #Param: maxUpward(float:0) Instant temperature increase limit, as required by some firmwares (C)
-#Param: maxDownward(float:0) Instant temperature decrease limit, as some firmwares crash on big drops (C)
+#Param: maxDownward(float:0) Instant temperature decrease limit, as some firmwares halt on big drops (C)
 #Param: zOffset(float:0) Vertical shift of the variations, as shown at the end of the gcode file (mm)
 #Param: skipStartZ(float:0) Skip some Z at start of print, i.e. raft height (mm)
-#Param: scanForZHop(int:5) Lines to scan ahead for Z-Hop.  Max 5, 0 to disable.
+#Param: scanForZHop(int:5) G-code lines to scan ahead for Z-Hop. Max 5 (default), 0 to disable.
 
 __copyright__ = "Copyright (C) 2012-2017 Jeremie@Francois.gmail.com"
 __author__ = 'Jeremie Francois (jeremie.francois@gmail.com)'
@@ -124,7 +124,7 @@ def get_value(gcode_line, key, default=None):
 
 
 def get_z(line, default=None):
-    # new 20130727: now support G0 in addition to G1
+    # Support G0 and G1 "move" commands
     if get_value(line, 'G') == 0 or get_value(line, 'G') == 1:
         return get_value(line, 'Z', default)
     else:
@@ -132,7 +132,7 @@ def get_z(line, default=None):
 
 
 try:
-    xrange
+    xrange  # python 2.7 vs 3 compatibility
 except NameError:
     xrange = range
 
@@ -239,11 +239,10 @@ thisZ = 0
 eol = "#"
 for line in lines:
     thisZ = get_z(line)
-    if thisZ != None:
+    if thisZ is not None:
         if maxZ < thisZ:
             maxZ = thisZ
-    if eol == "#" and len(
-            line) >= 2:  # new 20130727:btw detect existing EOL to stay consistent when we'll be adding our own lines
+    if eol == "#" and len(line) >= 2:  # detect existing EOL to stay consistent when we'll be adding our own lines
         if line[-2] == "\r":  # windows...
             eol = "\r\n"
 if eol == "#":
@@ -289,29 +288,27 @@ for z, v in noises.items():
 def noise_to_temp(noise):
     return minTemp + noise * (maxTemp - minTemp)
 
-scanForZHop = int(scanForZHop) #fix unicode error when using in range
+scanForZHop = int(scanForZHop)  # fix unicode error when using in range
 if scanForZHop > 5:
     scanForZHop = 5
 
+
 def z_hop_scan_ahead(index, z):
     if scanForZHop == 0:
-        return False #Do not scan ahead
+        return False  # Do not scan ahead
     for i in range(scanForZHop):
         checkZ = get_z(lines[index + i], z)
         if checkZ < z:
-            return True #Found z-hop
-    return False #Did not find z-hop
+            return True  # Found z-hop
+    return False  # Did not find z-hop
 
 
 #
 # Now save the file with the patched M104 temperature settings
 #
 with open(filename, "w") as f:
-    # Prepare a transposed temperature graph for the end of the file
+    # Prepare a transposed ASCII-art temperature graph for the end of the file
 
-    #
-    # new 20130727: header and first (blocking) temperature change
-    #
     f.write(";woodified gcode, see graph at the end - jeremie.francois@gmail.com - generated on " +
             datetime.datetime.now().strftime("%Y%m%d-%H%M") + eol)
     warmingTempCommands = "M230 S0" + eol  # enable wait for temp on the first change
@@ -322,7 +319,7 @@ with open(filename, "w") as f:
     # The two following commands depends on the firmware:
     warmingTempCommands += "M230 S1" + eol  # now disable wait for temp on the first change
     warmingTempCommands += "M116" + eol  # wait for the temperature to reach the setting (M109 is obsolete)
-    f.write(warmingTempCommands);
+    f.write(warmingTempCommands)
 
     graphStr = ";WoodGraph: Wood temperature graph (from " + str(minTemp) + "C to " + str(
         maxTemp) + "C, grain size " + str(grainSize) + "mm, z-offset " + str(zOffset) + ", scanForZHop " + str(scanForZHop) + ")"
@@ -360,7 +357,7 @@ with open(filename, "w") as f:
                 thisZ = get_z(line, formerZ)
                 if thisZ != formerZ and thisZ in noises and not z_hop_scan_ahead(index, thisZ):
 
-                    if firstTemp != 0 and thisZ <= 0.5:  # if specifed, keep the first temp for the first 0.5mm
+                    if firstTemp != 0 and thisZ <= 0.5:  # if specified, keep the first temp for the first 0.5mm
                         temp = firstTemp
                     else:
                         temp = noise_to_temp(noises[thisZ])
