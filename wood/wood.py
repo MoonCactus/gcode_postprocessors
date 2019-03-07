@@ -12,6 +12,7 @@
 #Param: zOffset(float:0) Vertical shift of the variations, as shown at the end of the gcode file (mm)
 #Param: skipStartZ(float:0) Skip some Z at start of print, i.e. raft height (mm)
 #Param: scanForZHop(int:5) G-code lines to scan ahead for Z-Hop. Max 5 (default), 0 to disable.
+#Param: tempCommand(string: M104) In case you want to rely on M109 for example (pause until temperature settles down)
 
 __copyright__ = "Copyright (C) 2012-2017 Jeremie@Francois.gmail.com"
 __author__ = 'Jeremie Francois (jeremie.francois@gmail.com)'
@@ -59,9 +60,9 @@ try:
 except NameError:
     # Then we are called from the command line (not from cura)
     # trying len(inspect.stack()) > 2 would be less secure btw
-    opts, extraparams = getopt.getopt(sys.argv[1:], 'i:a:t:g:u:d:r:s:z:k:c:f:h',
+    opts, extraparams = getopt.getopt(sys.argv[1:], 'i:a:t:g:u:d:r:s:z:k:c:f:w:h',
                                       ['min=', 'max=', 'first-temp=', 'grain=', 'max-upward=', 'max-downward=', 'random-seed=',
-                                       'spikiness-power=', 'z-offset=', 'skip-start-z=', 'scan-for-z-hop=', 'file=', 'help'])
+                                       'spikiness-power=', 'z-offset=', 'skip-start-z=', 'scan-for-z-hop=', 'temp-command', 'file=', 'help'])
     minTemp = 190
     maxTemp = 240
     firstTemp = 0
@@ -72,6 +73,8 @@ except NameError:
     zOffset = 0
     scanForZHop = 5
     spikinessPower = 1.0
+    tempCommand = 'M104'
+    waitTemp = False
     filename = ""
     for o, p in opts:
         if o in ['-f', '--file']:
@@ -102,6 +105,8 @@ except NameError:
             spikinessPower = float(p)
             if spikinessPower <= 0:
                 spikinessPower = 1.0
+        elif o in ['-w', '--temp-command']:
+            tempCommand = p  # e.g. M109 in place of default M104, see https://www.simplify3d.com/support/articles/3d-printing-gcode-tutorial/#M104-M109
     if not filename:
         plugin_standalone_usage(inspect.stack()[0][1])
 
@@ -312,10 +317,10 @@ with open(filename, "w") as f:
     f.write(";woodified gcode, see graph at the end - jeremie.francois@gmail.com - generated on " +
             datetime.datetime.now().strftime("%Y%m%d-%H%M") + eol)
     warmingTempCommands = "M230 S0" + eol  # enable wait for temp on the first change
-    if firstTemp == 0:
-        warmingTempCommands += ("M104 S%i" + eol) % noise_to_temp(0)
-    else:
-        warmingTempCommands += ("M104 S%i" + eol) % firstTemp
+    t = firstTemp
+    if t == 0:
+        t = noise_to_temp(0)
+    warmingTempCommands += ("%s S%i" + eol) % (tempCommand, t)
     # The two following commands depends on the firmware:
     warmingTempCommands += "M230 S1" + eol  # now disable wait for temp on the first change
     warmingTempCommands += "M116" + eol  # wait for the temperature to reach the setting (M109 is obsolete)
@@ -380,7 +385,7 @@ with open(filename, "w") as f:
                             temp = maxTemp
                         postponedTempLast = temp
 
-                        f.write(("M104 S%i" + eol) % temp)
+                        f.write(("%s S%i" + eol) % (tempCommand, temp))
 
                     formerZ = thisZ
 
