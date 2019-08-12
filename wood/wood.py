@@ -130,6 +130,8 @@ def get_value(gcode_line, key, default=None):
 
 def get_z(line, default=None):
     # Support G0 and G1 "move" commands
+    if line.startswith(";WoodGraph:"):
+        return default
     if get_value(line, 'G') == 0 or get_value(line, 'G') == 1:
         return get_value(line, 'Z', default)
     else:
@@ -238,7 +240,7 @@ with open(filename, "r") as f:
 # Limit the number of changes for helicoidal/Joris slicing method
 minimumChangeZ = 0.1
 
-# Find the total height of the object
+# Find the total height of the object (minus optional additional Z-hops)
 maxZ = 0
 thisZ = 0
 eol = "#"
@@ -275,13 +277,13 @@ pendingNoise = None
 formerZ = -1
 for line in lines:
     thisZ = get_z(line, formerZ)
+
     if thisZ > 2 + formerZ:
         formerZ = thisZ
     # noises = {}  # some damn slicers include a big negative Z shift at the beginning, which impacts the min/max range
     elif abs(thisZ - formerZ) > minimumChangeZ and thisZ > skipStartZ:
         formerZ = thisZ
         noises[thisZ] = perlin_to_normalized_wood(thisZ)
-lastPatchZ = thisZ  # record when to stop patching M104, to leave the last one switch the temperature off
 
 # normalize built noises
 noisesMax = noises[max(noises, key=noises.get)]
@@ -356,7 +358,7 @@ with open(filename, "w") as f:
         elif ";woodified" in line.lower():
             skip_lines = 4  # skip 4 more lines after our comment
         elif not ";woodgraph" in line.lower():  # forget optional former temp graph lines in the file
-            if thisZ == lastPatchZ:
+            if thisZ == maxZ:
                 f.write(line)  # no more patch, keep the important end scripts unchanged
             elif not "m104" in line.lower():  # forget any previous temp in the file
                 thisZ = get_z(line, formerZ)
