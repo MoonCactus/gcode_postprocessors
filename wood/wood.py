@@ -393,13 +393,10 @@ with open(filename, "w") as f:
 
                     # Build the corresponding graph line
                     t = int(19 * (temp - minTemp) / (maxTemp - minTemp))
-                    str = ";WoodGraph: Z %03f " % thisZ
-                    str += "@%3iC | " % temp
-                    for i in xrange(0, t):
-                        str += "#"
-                    for i in xrange(t + 1, 20):
-                        str += "."
-                    graphStr += str + eol
+                    graphStr += ";WoodGraph: Z %03f " % thisZ
+                    graphStr += "@%3iC | " % temp
+                    graphStr += '#'*t + '.'*(20 - t)
+                    graphStr += eol
 
                 f.write(line)
 
