@@ -10,8 +10,13 @@ More pictures and how it works is described on [this blog post](http://www.tridi
 
 ## As a plugin for Cura
 
-Move the .py file to the plugin folder. Ultimaker does not tell which one really, but look with your file manager for a folder named ```plugins``` or for a plugin which is shipped by default (e.g. ```TweakAtZ.py```). Then simply copy/paste this file alongside, and restart Cura.
-Actually, it was an official plugin in Cura (from version 12.11+). But the support for Cura plugins at Ultimaker was destroyed during a change to their website years ago, and it never was restored (why?!).
+*(Tested working with Cura 4.13.1, with Windows + Python3, and Mac OS + Python2)*
+
+* Open your config folder *(Help > Show Configuration Folder)*, and place *"Woodgrain_Cura.py"* into the scripts directory.
+
+* Restart Cura
+
+* Open the Post Processing window (*Extensions > Post Processing > Modify G-Code*), select "Add a Script", and select "Woodgrain Effect". Adjust the parameters if necessary, then close the window.
 
 ## As a web service
 
