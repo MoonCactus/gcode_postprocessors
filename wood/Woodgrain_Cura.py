@@ -303,13 +303,12 @@ class Woodgrain_Cura(Script):
         # Deconstruct the gcode
         #   - One layer may have more than one command. To be safe we pull everything apart
         for layer in data:
-            # Check that a layer is being printed
             gcode_line = layer.split(eol)
             for line in gcode_line:
                 lines.append(line)  #This is now our main source of data
 
         # Get the parameters from the "Extensions > Post Processing > Modify G-Code" dialog
-        #   - Method is not defined here, but rather imported from Cura's "..Script" module. Provides access to 
+        #   - Method is not defined here, but rather imported from Cura's "..Script" module.
         #==========================================
         minTemp = int(self.getSettingValueByKey("minTemp"))
         maxTemp = int(self.getSettingValueByKey("maxTemp"))
@@ -361,7 +360,7 @@ class Woodgrain_Cura(Script):
                 if maxZ < thisZ:
                     maxZ = thisZ
 
-        "First pass generates the noise curve. We will normalize it as the user expects to reach the min & max temperatures"
+        #First pass generates the noise curve. We will normalize it as the user expects to reach the min & max temperatures
         perlin = self.Perlin()
 
 
@@ -417,7 +416,7 @@ class Woodgrain_Cura(Script):
 
 
         # Drop-in replacement for old file writer
-        #   - Grabs data as an array of lines, terminated with eol
+        #   - Stores data as a list of lines, terminated with eol
         # =============================================================
         class write_to_list:
             def __init__(self):
