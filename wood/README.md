@@ -10,7 +10,7 @@ More pictures and how it works is described on [this blog post](http://www.tridi
 
 ## As a plugin for Cura
 
-*(Tested working with Cura 4.13.1, with Windows + Python3, and Mac OS + Python2)*
+*(Tested working with Cura 4.13.1)*
 
 * Open your config folder *(Help > Show Configuration Folder)*, and place *"Woodgrain_Cura.py"* into the scripts directory.
 
