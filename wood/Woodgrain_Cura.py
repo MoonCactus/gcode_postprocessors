@@ -12,7 +12,7 @@ import threading
 #  See https://github.com/Ultimaker/Uranium
 from UM.Logger import Logger    # Write to Cura Log
 from UM.Message import Message  # Progress bar
-from PyQt5.QtCore import QCoreApplication   # Keep gui alive
+from PyQt6.QtCore import QCoreApplication   # Keep gui alive
 from UM.Qt.QtApplication import QtApplication  # Check if cura has closed
 # ------------------------------------
 

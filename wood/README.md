@@ -10,13 +10,15 @@ More pictures and how it works is described on [this blog post](http://www.tridi
 
 ## As a plugin for Cura
 
-*(Tested working with Cura 4.13.1)*
+*(Tested working with Cura 5.0.0)*
 
 * Open your config folder *(Help > Show Configuration Folder)*, and place *"Woodgrain_Cura.py"* into the scripts directory.
 
 * Restart Cura
 
 * Open the Post Processing window (*Extensions > Post Processing > Modify G-Code*), select "Add a Script", and select "Woodgrain Effect". Adjust the parameters if necessary, then close the window.
+
+* Note: Not compatible with *Print Sequence: One at a Time*
 
 ## As a web service
 
